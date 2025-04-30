@@ -4,8 +4,7 @@
 
 This Java program efficiently handles high-volume FIX message processing, storage, and retrieval.
 
-![ib-fix-handler-challenge](./fix-handler-ib.png)
-
+<img width="1360" alt="fix-handler-ib" src="https://github.com/user-attachments/assets/6b1f3a4a-63ed-4512-8e66-abfb4299b0fc" />
 
 ## Architecture
 
