@@ -2,44 +2,57 @@ package org.ib.fix.ingestor;
 
 import org.ib.fix.model.RawFixMessage;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FixFileReader {
 
+    private static final int DEFAULT_BATCH_SIZE = 1000;
+
     private final String filePath;
+    private final int batchSize;
 
     public FixFileReader(String filePath) {
-        this.filePath = filePath;
+        this(filePath, DEFAULT_BATCH_SIZE);
     }
 
-    public List<List<RawFixMessage>> readBatches() {
+    public FixFileReader(String filePath, int batchSize) {
+        this.filePath = filePath;
+        this.batchSize = batchSize;
+    }
+
+    public List<List<RawFixMessage>> readBatches() throws IOException {
         List<List<RawFixMessage>> batches = new ArrayList<>();
-        List<RawFixMessage> batch = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+        List<RawFixMessage> currentBatch = new ArrayList<>();
+
+        try (BufferedReader reader = createReader()) {
             String line;
             while ((line = reader.readLine()) != null) {
-                RawFixMessage message = parseFixMessage(line); // Implement message parsing
-                batch.add(message);
+                RawFixMessage message = toRawFixMessage(line);
+                currentBatch.add(message);
 
-                // When batch reaches a certain size, dispatch it
-                if (batch.size() >= 1000) { // Adjust batch size as needed
-                    batches.add(batch);
-                    batch = new ArrayList<>();
+                if (currentBatch.size() >= batchSize) {
+                    batches.add(new ArrayList<>(currentBatch));
+                    currentBatch.clear();
                 }
             }
-            // Add the last batch if not empty
-            if (!batch.isEmpty()) {
-                batches.add(batch);
+
+            if (!currentBatch.isEmpty()) {
+                batches.add(currentBatch);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
         return batches;
     }
 
-    private RawFixMessage parseFixMessage(String line) {
-        // Parse a single line into a RawFixMessage object
-        return new RawFixMessage(line); // Replace with actual parsing logic
+    private BufferedReader createReader() throws IOException {
+        return new BufferedReader(new FileReader(filePath));
+    }
+
+    private RawFixMessage toRawFixMessage(String line) {
+        return new RawFixMessage(line); // replace with actual parsing logic if needed
     }
 }

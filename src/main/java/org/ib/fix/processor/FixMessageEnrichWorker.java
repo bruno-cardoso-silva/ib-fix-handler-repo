@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 public class FixMessageEnrichWorker implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(FixMessageEnrichWorker.class.getName());
-    private static final int BATCH_SIZE = 100;
+    private static final int BATCH_SIZE = 1000;
 
     private final BlockingQueue<List<RawFixMessage>> inputQueue;
     private final BlockingQueue<List<Message>> outputQueue;

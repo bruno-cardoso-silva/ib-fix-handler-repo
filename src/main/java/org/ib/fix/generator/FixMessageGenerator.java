@@ -11,74 +11,87 @@ import java.util.UUID;
 
 public class FixMessageGenerator {
 
-    private static final int TOTAL_MESSAGES = 5000;
-    private static final Random random = new Random();
+    private final int totalMessages;
+    private final String outputFile;
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HH:mm:ss.SSS");
     private static final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+    private static final Random random = new Random();
 
-    public static void main(String[] args) throws IOException {
-        String outputFile = "fix_messages.txt";
+    public FixMessageGenerator(int totalMessages, String outputFile) {
+        this.totalMessages = totalMessages;
+        this.outputFile = outputFile;
+    }
 
+    public void generateMessages() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-            for (int i = 0; i < TOTAL_MESSAGES; i++) {
-                boolean isFilled = i < 2500;
+            for (int i = 0; i < totalMessages; i++) {
+                boolean isFilled = i < (totalMessages / 2);
                 String msg = generateFixMessage(i, isFilled);
                 writer.write(msg);
                 writer.newLine();
             }
         }
-
-        System.out.println("Generated " + TOTAL_MESSAGES + " FIX messages to " + outputFile);
+        System.out.println("Generated " + totalMessages + " FIX messages to " + outputFile);
     }
 
-    private static String generateFixMessage(int index, boolean isFilled) {
-        StringBuilder sb = new StringBuilder();
-
+    public String generateFixMessage(int index, boolean isFilled) {
         String now = LocalDateTime.now().format(formatter);
-        String price = decimalFormat.format(10 + random.nextDouble() * 10); // range: 10–20
-        int orderQty = random.nextInt(9000) + 1000; // 1000 - 9999
+        String price = decimalFormat.format(10 + random.nextDouble() * 10);
+        int orderQty = random.nextInt(9000) + 1000;
         int lastQty = isFilled ? orderQty : random.nextInt(orderQty - 1) + 1;
-        String account = accounts();
+        String account = randomAccount();
         String symbol = randomSymbol();
-        String enteringTrader = enteringTraders(); // tag 5149
-        int side = random.nextBoolean() ? 1 : 2; // 1 = Buy, 2 = Sell
-        String clOrdId = UUID.randomUUID().toString().substring(0, 10); // tag 11 - unique
-        String orderId = UUID.randomUUID().toString().substring(0, 10); // tag 37 - unique
+        String enteringTrader = randomTrader();
+        int side = random.nextBoolean() ? 1 : 2;
+        String clOrdId = UUID.randomUUID().toString().substring(0, 10);
+        String orderId = UUID.randomUUID().toString().substring(0, 10);
 
-        sb.append("8=FIX.4.4^9=100^35=8"); // FIX header
-        sb.append("^34=").append(index);
-        sb.append("^49=SYSTEM^52=").append(now).append("^56=DROPCOPY");
-        sb.append("^1=").append(account);             // Account
-        sb.append("^55=").append(symbol);             // Symbol
-        sb.append("^54=").append(side);               // Side
-        sb.append("^31=").append(price);              // LastPx
-        sb.append("^32=").append(lastQty);            // LastQty
-        sb.append("^150=F");                          // ExecType = Fill
-        sb.append("^39=").append(isFilled ? 2: 1);    // OrdStatus = Filled
-        sb.append("^60=").append(now);                // TransactTime
-        sb.append("^5149=").append(enteringTrader);   // entering traders
-        sb.append("^11=").append(clOrdId);            //client order id
-        sb.append("^37=").append(orderId);            //order id
-        sb.append("^38=").append(orderQty);            //orderQty
-        sb.append("^14=").append(isFilled? lastQty: lastQty -1);
-        sb.append("^6=").append(price);                               //orderQty
-        sb.append("^10=000^");                                     //Checksum dummy
-
-        return sb.toString();
+        return new StringBuilder()
+                .append("8=FIX.4.4^9=100^35=8")
+                .append("^34=").append(index)
+                .append("^49=SYSTEM^52=").append(now).append("^56=DROPCOPY")
+                .append("^1=").append(account)
+                .append("^55=").append(symbol)
+                .append("^54=").append(side)
+                .append("^31=").append(price)
+                .append("^32=").append(lastQty)
+                .append("^150=F")
+                .append("^39=").append(isFilled ? 2 : 1)
+                .append("^60=").append(now)
+                .append("^5149=").append(enteringTrader)
+                .append("^11=").append(clOrdId)
+                .append("^37=").append(orderId)
+                .append("^38=").append(orderQty)
+                .append("^14=").append(isFilled ? lastQty : lastQty - 1)
+                .append("^6=").append(price)
+                .append("^10=000^")
+                .toString();
     }
 
-    private static String randomSymbol() {
+    private String randomSymbol() {
         String[] symbols = {"PETR4", "VALE3", "ITUB4", "BBDC4", "ABEV3", "BBAS3", "MGLU3", "WEGE3", "B3SA3", "LREN3"};
         return symbols[random.nextInt(symbols.length)];
     }
 
-    private static String enteringTraders() {
+    private String randomTrader() {
         String[] traders = {"TRADER1", "TRADER2", "TRADER3", "TRADER4", "TRADER5"};
         return traders[random.nextInt(traders.length)];
     }
 
-    private static String accounts() {
-        final String[]  accounts = {"ACC01", "ACC02", "ACC03", "ACC04", "ACC05", "ACC06", "ACC07", "ACC08", "ACC09", "ACC10"};
+    private String randomAccount() {
+        String[] accounts = {"ACC01", "ACC02", "ACC03", "ACC04", "ACC05", "ACC06", "ACC07", "ACC08", "ACC09", "ACC10"};
         return accounts[random.nextInt(accounts.length)];
+    }
+
+    public static void main(String[] args) {
+        String file = "fix_messages.txt";
+        int total = 5000;
+
+        FixMessageGenerator generator = new FixMessageGenerator(total, file);
+        try {
+            generator.generateMessages();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -7,6 +7,7 @@ import org.ib.fix.processor.FixMessageEnrichWorker;
 import org.ib.fix.execution.FixMessageReportManager;
 import quickfix.Message;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -16,11 +17,10 @@ public class FixMessageProcessingApp {
     private static final BlockingQueue<List<RawFixMessage>> inputQueue = new LinkedBlockingQueue<>();
     private static final BlockingQueue<List<Message>> outputQueue = new LinkedBlockingQueue<>();
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
 
         // Start of overall execution
         long overallStart = System.currentTimeMillis();
-
         // Step 1: Read and dispatch
         long start = System.currentTimeMillis();
         FixFileReader fileReader = new FixFileReader(FIX_FILE_PATH);
@@ -46,12 +46,8 @@ public class FixMessageProcessingApp {
         FixMessageReportManager reportManager = new FixMessageReportManager(outputQueue);
         reportManager.start();
 
-        // Step 4: Wait for enrichment to finish with a longer timeout (e.g., 30 seconds)
+        // Step 4: Wait for enrichment to finish
         enrichmentExecutor.shutdown();
-        if (!enrichmentExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
-            System.out.println("Enrichment worker did not finish in time. Forcing shutdown.");
-            enrichmentExecutor.shutdownNow();
-        }
 
         // Step 5: Shutdown report manager after enrichment is done
         reportManager.shutdown();

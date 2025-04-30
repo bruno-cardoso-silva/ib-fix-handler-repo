@@ -21,6 +21,7 @@ public class FixMessageProcessorWorker implements Runnable {
         try {
             while (true) {
                 List<Message> messages = inputQueue.take();
+
                 if (messages.isEmpty()) {
                     break; // Poison pill
                 }
@@ -30,7 +31,7 @@ public class FixMessageProcessorWorker implements Runnable {
 
                 for (Message msg : messages) {
 
-                    String line = msg.toString().replace('\001', '|');
+                    String line = msg.toString().replace('\u0001', '|');
 
                     try {
                         String horario = msg.isSetField(52) ? msg.getString(52) : ""; // SendingTime
@@ -71,8 +72,8 @@ public class FixMessageProcessorWorker implements Runnable {
 
                 }
 
-                writeBatchToFile("all.csv", allLines);
-                writeBatchToFile("fulfilled.csv", fulfilledLines);
+                writeBatchToFile("AllMsgs.csv", allLines);
+                writeBatchToFile("FullFill.txt", fulfilledLines);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -99,15 +100,14 @@ public class FixMessageProcessorWorker implements Runnable {
         }
     }
 
-
-    private synchronized void writeBatchToFile(String fileName, List<String> lines) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
-            for (String line : lines) {
-                writer.write(line);
-                writer.newLine();
+    private void writeBatchToFile(String fileName, List<String> lines) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
+                for (String line : lines) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
