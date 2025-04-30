@@ -2,7 +2,7 @@
 
 ## Overview
 
-This Java program efficiently handles high-volume FIX message processing, storage, and retrieval.
+This Java program handles high-volume FIX message processing, storage (disk), and retrieval.
 
 <img width="1360" alt="fix-handler-ib" src="https://github.com/user-attachments/assets/6b1f3a4a-63ed-4512-8e66-abfb4299b0fc" />
 
@@ -48,15 +48,14 @@ Queues are key to this design's scalability. They decouple message processing an
 This allows the system to handle high message volumes and adapt to changing load conditions.
 
 ## Areas for Improvement
+The project is full of room for improvements :)  
 
-The writer modules, specifically `FileWriterTask` and `writeBatchToFile`, could be improved in:
+Here are some points I really believe one could change for achiving better software overall.
 
-* **Error Handling:** Implement robust error handling (e.g., retry, dead-letter queue).
-* **File Rotation:** Add file rotation for long-running applications.
-* **Storage:** Consider a database or message queue for more reliable storage.
-* **File I/O:** Use asynchronous file I/O to improve performance.
-* **Asynchronous Processing:** Explore fully asynchronous application design.
-* **Ring Buffer:** Use a ring buffer (e.g., Chronicle Queue) for efficient data storage and retrieval.
+* **Error Handling:** Implementing robust error handling (e.g., retry, dead-letter queue).
+* **File I/O:** Using asynchronous file I/O to improve performance.
+* **Asynchronous Processing:** Exploring fully asynchronous application design.
+* **Ring Buffer:** Using a ring buffer (e.g., Chronicle Queue) for efficient data storage and retrieval.
 
 ## How to Run the Program
 
@@ -88,6 +87,11 @@ The writer modules, specifically `FileWriterTask` and `writeBatchToFile`, could 
         ```
 
       Running without flags processes FIX messages from "fix_messages.txt" (the default mode).
+4.  **Artefacts:**
+
+    ```
+    3 files should be produced at the end AllMsgs.csv, FinalReport.csv and FullFill.txt
+    ```
 
 ## FIX Message Generator
 
