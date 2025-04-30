@@ -39,7 +39,7 @@ public class ReportAggregator {
                     }
                 } else {
                     String[] fields = line.split("\\|");
-                    Map<String, String> fieldMap = new HashMap<>();
+                    Map<String, String> fieldMap = new HashMap<>(10_000);
                     for (String field : fields) {
                         String[] keyValue = field.split("=", 2);
                         if (keyValue.length == 2) {
@@ -135,11 +135,5 @@ public class ReportAggregator {
         double getAverage() {
             return sumQty == 0.0 ? 0.0 : sumPriceQty / sumQty;
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        ReportAggregator aggregator = new ReportAggregator();
-        aggregator.generateFinalComparisonReport();
-        System.out.println("Final report generated: FinalReport.csv");
     }
 }

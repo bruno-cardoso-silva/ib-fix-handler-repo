@@ -8,12 +8,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FixMessageProcessorWorker implements Runnable {
     private final BlockingQueue<List<Message>> inputQueue;
+    private final ConcurrentLinkedQueue<String> allLines;
+    private final ConcurrentLinkedQueue<String> fulfilledLines;
 
-    public FixMessageProcessorWorker(BlockingQueue<List<Message>> inputQueue) {
+
+    public FixMessageProcessorWorker(BlockingQueue<List<Message>> inputQueue, ConcurrentLinkedQueue<String> allLines, ConcurrentLinkedQueue<String> fulfilledLines) {
         this.inputQueue = inputQueue;
+        this.allLines = allLines;
+        this.fulfilledLines = fulfilledLines;
     }
 
     @Override
@@ -26,8 +32,6 @@ public class FixMessageProcessorWorker implements Runnable {
                     break; // Poison pill
                 }
 
-                List<String> allLines = new ArrayList<>();
-                List<String> fulfilledLines = new ArrayList<>();
 
                 for (Message msg : messages) {
 
@@ -59,11 +63,11 @@ public class FixMessageProcessorWorker implements Runnable {
                                 String.format("%.2f", notionalExecAcum),
                                 trader
                         );
-                        allLines.add(enrichedLine);
+                        allLines.offer(enrichedLine);
                         if (isFulfilled(msg)) {
                             msg.setDouble(1010,  notionalOrdem); // notional order
                             msg.setString(1011, msg.getString(5149)); //entering trade
-                            fulfilledLines.add(line);
+                            fulfilledLines.offer(line);
                         }
 
                     } catch (Exception e) {
@@ -71,9 +75,6 @@ public class FixMessageProcessorWorker implements Runnable {
                     }
 
                 }
-
-                writeBatchToFile("AllMsgs.csv", allLines);
-                writeBatchToFile("FullFill.txt", fulfilledLines);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -100,14 +101,4 @@ public class FixMessageProcessorWorker implements Runnable {
         }
     }
 
-    private void writeBatchToFile(String fileName, List<String> lines) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))) {
-                for (String line : lines) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-    }
 }
